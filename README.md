@@ -5,7 +5,16 @@ This directory reproduces the numerical calculations, four tables, and Figure 1 
 1. three independent compound-Poisson claim processes with Pareto(1.5) severities and arrival rates `(1, 2, 4)`; and
 2. a common-arrival compound-Poisson process with Pareto(1.5) margins and an equicorrelated Gaussian copula with correlation `0.5`.
 
+Both models are evaluated with positive premium loadings `theta = 0.10`,
+`theta = 0.20`, and `theta = 0.50`. The line-specific premium rate is
+`p_j = (1 + theta) lambda_j E[Z]`, where `E[Z] = 3`. Thus the independent
+model uses premium vectors `(3.3, 6.6, 13.2)`, `(3.6, 7.2, 14.4)`, and
+`(4.5, 9, 18)`, while the Gaussian common-arrival model uses
+`(3.3, 3.3, 3.3)`, `(3.6, 3.6, 3.6)`, and `(4.5, 4.5, 4.5)`.
+
 The program uses only base R. No contributed R packages are required.
+Fixed-capital ruin probabilities are evaluated at
+`u = 40, 80, 160, 320, 500`.
 
 ## Directory contents
 
@@ -30,7 +39,11 @@ section6-reproducibility/
     └── Sim_fig.pdf
 ```
 
-The committed files in `outputs/` are the results reported in the manuscript. They were generated with seed `20260618` using R 4.5.2. The four table CSV files also include 95% Monte Carlo confidence intervals, although Section 6 reports only the estimates and standard errors.
+The committed files in `outputs/` are the results reported in the manuscript.
+They were generated with seeds `20260618` (independent lines) and `20260619`
+(Gaussian copula) using R 4.5.2. The four table CSV files also include 95%
+Monte Carlo confidence intervals, although Section 6 reports only the
+estimates and standard errors.
 
 ## Reproduce the manuscript results
 
@@ -40,7 +53,9 @@ Install R, open a terminal in this directory, and run:
 Rscript code/NumExp_Sec6.R outputs
 ```
 
-The full run uses 40 batches of 100,000 conditional replications per independent line and 5,000,000 direct Gaussian-copula paths. It overwrites the six files in `outputs/` with results from the stated seed.
+The full run uses 10,000,000 direct paths for each model. It overwrites the
+six files in `outputs/` with
+results from the stated seeds.
 
 The script prints the allocation vectors, leading constants, capital checks, and simulation settings to the terminal. It also regenerates `outputs/Sim_fig.pdf`.
 
@@ -55,28 +70,30 @@ Rscript code/check_outputs.R outputs
 The following smaller run checks that the code executes, but it is not intended to reproduce the manuscript’s numerical precision:
 
 ```sh
-SEC6_IND_BATCHES=2 \
-SEC6_IND_REPS_PER_BATCH=1000 \
+SEC6_IND_PATHS=10000 \
 SEC6_GAUSSIAN_PATHS=10000 \
 SEC6_CHUNK_SIZE=2000 \
 Rscript code/NumExp_Sec6.R /tmp/section6-smoke-test
 Rscript code/check_outputs.R /tmp/section6-smoke-test
 ```
 
-On Windows PowerShell, set the same variables with `$env:SEC6_IND_BATCHES="2"` and analogous commands before running `Rscript`.
+On Windows PowerShell, set the same variables with
+`$env:SEC6_IND_PATHS="10000"` and analogous commands before running `Rscript`.
 
 ## Methods and standard errors
 
-For the independent-line model, the script applies the unbiased Asmussen–Kroese conditional Monte Carlo estimator separately to each marginal compound-Poisson tail and combines the three marginal probabilities by inclusion–exclusion. If `psi_hat[r]` is the combined estimate from batch `r`, the reported standard error is
+For both models, the script simulates the finite-time ruin event pathwise.
+Between claim epochs all three net-claim coordinates decrease because premium
+is collected, so ruin can occur only immediately after a claim. At every
+claim epoch the program checks whether at least two coordinates satisfy
+`L_j(t) - p_j t > u a_j`. This is the exact multidimensional event; it does
+not use a marginal inclusion–exclusion approximation.
+
+For a directly simulated sample proportion `psi_hat` based on `n_paths`, the
+reported binomial standard error is
 
 ```text
-sample standard deviation of psi_hat[1], ..., psi_hat[40] / sqrt(40).
-```
-
-For the Gaussian-copula model, ruin is estimated as a direct sample proportion from 5,000,000 paths. Its reported binomial standard error is
-
-```text
-sqrt(psi_hat * (1 - psi_hat) / 5000000).
+sqrt(psi_hat * (1 - psi_hat) / n_paths).
 ```
 
 The confidence limits in the CSV files are the estimate plus or minus 1.96 standard errors, truncated below at zero.

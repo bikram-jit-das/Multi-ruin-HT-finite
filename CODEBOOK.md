@@ -15,31 +15,25 @@
 
 | Column | Meaning |
 |---|---|
+| `premium_loading` | Safety loading `theta` in `p_j = (1 + theta) lambda_j E[Z]` |
 | `kind` | `u-grid` for a fixed-capital comparison or `capital` for inversion at a target probability |
 | `allocation` | Allocation being evaluated |
 | `value` | Total capital `u`; for `kind = capital`, this is the approximating capital obtained by inversion |
 | `epsilon` | Target ruin probability for a capital-inversion row; missing for fixed-capital rows |
+| `premium_p1`, `premium_p2`, `premium_p3` | Premium-rate vector used for the pathwise simulation |
 | `mc_probability` | Monte Carlo estimate of the finite-horizon ruin probability |
 | `mc_se` | Monte Carlo standard error |
 | `ci_low`, `ci_high` | Normal-approximation 95% Monte Carlo confidence limits |
 | `K` | Allocation-dependent leading constant in the Section 6 tail formula |
 | `tail_approximation` | First-order tail approximation evaluated at `value` |
 | `mc_to_tail_approximation` | `mc_probability / tail_approximation` |
-
-## Independent-line-only columns
-
-| Column | Meaning |
-|---|---|
-| `n_batches` | Number of independent output-analysis batches |
-| `n_per_batch` | Conditional Monte Carlo replications per batch and per line |
-| `conditional_replications_per_line` | Product of `n_batches` and `n_per_batch` |
-
-## Gaussian-copula-only columns
-
-| Column | Meaning |
-|---|---|
 | `exceedances` | Number of directly simulated paths satisfying the ruin event |
 | `n_paths` | Total number of directly simulated compound-Poisson paths |
+| `seed` | Model-specific random-number seed |
+
+For each path, the program checks the simultaneous multidimensional ruin event
+at every claim epoch. Because premium makes every net-claim coordinate decrease
+between claim epochs, this check is exact over the full horizon.
 
 ## Allocation summary columns
 
